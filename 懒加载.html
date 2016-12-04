@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>懒加载原理</title>
+	<style type="text/css">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		.header{
+			width: 1000px;
+			height: 300px;
+			background-color: pink;
+			margin: 50px auto;
+		}
+		.section1{
+			width: 1000px;
+			height: 400px;
+			background-color: skyblue;
+			margin: 50px auto;
+		}
+		.section2{
+			width: 1000px;
+			height: 267px;
+			border: 1px solid #000;
+			margin: 50px auto;
+		}
+		.section3{
+			width: 1000px;
+			height: 400px;
+			border: 1px solid #000;
+			margin: 50px auto;
+		}
+		.section4{
+			width: 1000px;
+			height: 400px;
+			border: 1px solid #000;
+			margin: 50px auto;
+		}
+		.section5{
+			width: 1000px;
+			height: 400px;
+			border: 1px solid #000;
+			margin: 50px auto;
+		}
+		.lazy-load-section{
+			position: relative;
+		}
+		.loading{
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			margin-left: -60px;
+			margin-top: -60px;
+		}
+		.section2 .box1{
+			float: left;
+			width: 500px;
+		}
+		.section2 .box1 img{
+			width: 500px;
+		}
+		.section2 .s img{
+			width: 250px;
+		}
+		.section2 .s{
+			float: right;
+			width: 250px;
+		}
+
+		.section3 .box1{
+			float: left;
+			width: 500px;
+		}
+		.section3 .box1 img{
+			width: 500px;
+		}
+		.section3 .s img{
+			width: 250px;
+		}
+		.section3 .s{
+			float: right;
+			width: 250px;
+		}
+
+		.section4 .box1{
+			float: left;
+			width: 500px;
+		}
+		.section4 .box1 img{
+			width: 500px;
+		}
+		.section4 .s img{
+			width: 250px;
+		}
+		.section4 .s{
+			float: right;
+			width: 250px;
+		}
+
+		.section5 .box1{
+			float: left;
+			width: 500px;
+		}
+		.section5 .box1 img{
+			width: 500px;
+		}
+		.section5 .s img{
+			width: 250px;
+		}
+		.section5 .s{
+			float: right;
+			width: 250px;
+		}
+
+	</style>
+</head>
+<body>
+	<div class="header">
+		
+	</div>
+	<div class="section1">
+		
+	</div>
+
+	<div class="section2 lazy-load-section" data-lazy-load="section2.html">
+		<img src="images/loading.gif" class="loading" />
+	</div>
+
+	<div class="section3 lazy-load-section" data-lazy-load="section3.html">
+		<img src="images/loading.gif" class="loading" />
+	</div>
+
+	<div class="section4 lazy-load-section" data-lazy-load="section4.html">
+		<img src="images/loading.gif" class="loading"/>
+	</div>
+
+	<div class="section5 lazy-load-section" data-lazy-load="section5.html">
+		<img src="images/loading.gif" class="loading" />
+	</div>
+	
+	<script type="text/javascript" src="js/jquery-1.12.3.min.js"></script>
+	<script type="text/javascript">
+		//把所有带有lazy-load-section类名的元素放入数组
+		//数组中存放的是对象，每个对象有3个属性，分别是DOM元素、这个元素的offsettop、是否已经加载完毕的标记。
+		var lazyloadarray = (function(){
+			var arr = [];
+			$(".lazy-load-section").each(function(){
+				arr.push({
+					"$dom" : $(this),
+					"offsettop" : $(this).offset().top,
+					"alreadyload" : false
+				});
+			});
+			return arr;
+		})();
+
+		 
+		//窗口卷动事件
+		$(window).scroll(function(){
+			//A是窗口的已经卷动的高度 ； B是窗口的高度
+			var A = $(this).scrollTop();
+			var B = $(this).height();
+
+			//遍历数组，看看此时能显示出谁，并且谁刚好already是false，防止你重复load
+			for(var i = 0 ; i < lazyloadarray.length ; i++){
+				if(lazyloadarray[i].alreadyload == false && A + B >= lazyloadarray[i].offsettop){
+					//jQuery新API，详见06号案例
+					$.get("data/" + lazyloadarray[i].$dom.attr("data-lazy-load"),function(data){
+							//找寻这个data里面的所有图片
+							var $images = $(data).find("img");
+							//让这5个图片都加载完毕之后做事情，所以要计数
+							//加载完毕一张图片计数器加1，看看是不是数组的长度
+							var count = 0;
+							$images.load(function(){
+								count++;
+								if(count == $images.length){
+									// alert("所有加载完毕了！");
+									lazyloadarray[i].$dom.html(data);
+								}
+							});
+						}
+					);
+					//更改标记，把alreadyload标记设置为true，防止重新加载一次
+					lazyloadarray[i].alreadyload = true;
+					break;
+				}
+			}
+		});
+	</script>
+</body>
+</html>
